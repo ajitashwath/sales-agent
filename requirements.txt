@@ -1,0 +1,41 @@
+# Versions below are the ones this project was built and tested against
+# (Python 3.11, Windows). Pinned exactly so the demo is reproducible.
+
+# --- Core API layer ---
+fastapi==0.165.0
+uvicorn[standard]==0.54.0
+websockets==17.4
+
+# --- Config ---
+python-dotenv==1.2.4
+pydantic==2.14.4
+pydantic-settings==2.16.3
+
+# --- Speech-to-text (streaming) ---
+deepgram-sdk==7.19.0
+
+# --- HTTP client (ElevenLabs streaming TTS, Google APIs) ---
+httpx==0.28.1
+
+# --- LangChain + Gemini ---
+langchain-core==1.8.4
+langchain-google-genai==4.5.2
+langchain-text-splitters==1.2.0
+
+# --- RAG / vector store (local ONNX MiniLM embeddings, no torch) ---
+langchain-chroma==1.2.0
+chromadb==1.5.9
+
+# --- Mock CRM ---
+SQLAlchemy==2.1.9
+
+# --- Google Calendar ---
+google-api-python-client==2.202.0
+google-auth==2.63.1
+google-auth-httplib2==0.4.4
+
+# --- PDF ingestion (optional, used by app/rag/ingest.py) ---
+pypdf==7.1.1
+
+# --- Test client: microphone capture + PCM playback (optional at runtime) ---
+sounddevice==0.5.6

@@ -1,0 +1,47 @@
+StockPilot Pricing (2026)
+
+StockPilot is cloud-based inventory software for small retailers. Pricing is per store location, billed monthly or annually. All plans include a 14-day free trial with no credit card required, and there is no setup fee.
+
+PLANS
+
+Starter - $49 per store per month
+- 1 store location included
+- Up to 3 user seats
+- Real-time stock levels and low-stock alerts
+- Barcode scanning from the mobile app
+- Purchase orders and supplier records
+- Standard email support (next business day)
+
+Growth - $99 per store per month
+- Everything in Starter
+- Up to 10 user seats per location
+- Multi-location transfers and consolidated reporting
+- Sales and margin analytics dashboard
+- POS integrations (Shopify, WooCommerce, Square)
+- Priority support with 4-hour first response during business hours
+- Optional onboarding package: $299 one-time (two guided sessions plus data migration review)
+
+Enterprise - custom pricing
+- Unlimited store locations and user seats
+- Role-based access control and audit log export
+- Dedicated account manager and 99.9% uptime SLA
+- API access with higher rate limits
+- SSO via Google Workspace or Microsoft Entra ID
+
+DISCOUNTS AND BILLING
+- Annual billing saves 20% compared to monthly.
+- Non-profits and registered educational institutions receive 15% off any plan.
+- Retailers migrating from a competitor can request a one-time migration credit of up to $500, approved case by case.
+- Prices are in USD and exclude applicable taxes (GST/VAT charged where required).
+- We accept major credit cards, UPI and bank transfer for annual plans.
+- Invoices can be issued to a company name and GST number on request.
+
+WHAT IS NOT INCLUDED
+- Hardware such as barcode scanners and label printers is not included; we recommend Bluetooth scanners that work with our mobile app.
+- Custom development work is quoted separately and typically starts at $2,000.
+- Additional user seats beyond the plan limit cost $12 per seat per month.
+
+TRIAL AND CANCELLATION
+- Cancel anytime; access continues until the end of the paid period.
+- We offer a 30-day money-back guarantee on the first paid invoice.
+- Downgrading from Growth to Starter keeps data for 90 days in read-only mode.

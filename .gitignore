@@ -221,3 +221,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- Sales voice agent (local artifacts) ---
+chroma_db/
+sales_agent.db
+credentials/
+*.pcm
+out/
+install.log
+.venv/

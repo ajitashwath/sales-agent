@@ -1,0 +1,43 @@
+StockPilot FAQ
+
+How long does implementation take?
+Most single-store retailers are live within 3 to 5 business days. Multi-store rollouts usually take 2 to 3 weeks depending on how many locations and how clean the existing product data is. The optional $299 onboarding package includes two guided sessions and a review of your data before import.
+
+Can you migrate our existing data?
+Yes. We import products, suppliers, customers and opening stock from CSV or Excel. If you are moving from another inventory system, our team can map the export for you. Historical sales can be imported for reporting, though very large histories are reviewed case by case.
+
+Does it work without internet?
+The mobile app supports offline mode for sales and stock adjustments. Changes sync when you reconnect. Purchasing, reporting and multi-store transfers need a connection.
+
+Which POS systems do you integrate with?
+Shopify, WooCommerce, Square, Lightspeed and Tally are supported natively. Others can connect through our REST API or Zapier. A full connector list is available on request.
+
+Does StockPilot handle accounting?
+No. StockPilot is inventory and operations software. We sync invoices and stock movements to QuickBooks, Xero, Zoho Books and Tally so your accountant keeps working in their usual tool.
+
+How secure is our data?
+Data is encrypted at rest with AES-256 and in transit with TLS 1.2 or higher. We are SOC 2 Type II certified, run daily backups with 30-day retention on Growth and Enterprise, and support SSO on Enterprise. We never sell customer data.
+
+What support is included?
+Starter includes email support with next-business-day response. Growth includes priority support with a 4-hour first response during business hours (9am to 6pm IST, Monday to Friday). Enterprise adds a dedicated account manager and a phone escalation line.
+
+Is there a free trial?
+Yes, 14 days, full Growth features, no credit card required. You can cancel from the dashboard at any time.
+
+Can we get our data out?
+Always. Export products, stock, suppliers and sales history to CSV at any time, or use the REST API. If you close your account we keep a final export available for 30 days.
+
+Do you support multiple currencies and taxes?
+Yes. Prices and costs can be recorded in multiple currencies, and tax rates can be set per product or per region. Tax reporting is basic; detailed tax filing should be done in your accounting software.
+
+What happens if we exceed the user limit?
+You can add extra seats for $12 per seat per month, or upgrade to a plan with more seats. Nothing stops working mid-day.
+
+Do you offer a discount for annual billing or non-profits?
+Annual billing saves 20%. Registered non-profits and educational institutions receive 15% off.
+
+What is the refund policy?
+We offer a 30-day money-back guarantee on the first paid invoice, no questions asked.
+
+Who do I contact for a demo?
+Ask the sales agent to book a 30-minute demo, or email sales@stockpilot.example. Demos cover your specific store setup and usually include a short live walkthrough.

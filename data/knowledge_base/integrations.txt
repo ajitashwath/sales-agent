@@ -1,0 +1,39 @@
+StockPilot Integrations and Company Background
+
+COMPANY
+StockPilot builds cloud inventory software for independent retailers and small chains, typically 1 to 20 stores. The company was founded in 2019, is headquartered in Bengaluru, India, and serves about 2,400 retail businesses across India, the UK, the UAE and Singapore. The team is around 60 people. The support and sales teams work in IST business hours, with follow-the-sun coverage for Enterprise customers.
+
+POS AND ECOMMERCE
+- Shopify: two-way sync of products, stock levels and orders. Orders reduce stock automatically; refunds restore it.
+- WooCommerce: same two-way sync, via the official plugin.
+- Square: stock sync and sales import for brick-and-mortar stores.
+- Lightspeed Retail: product and stock sync, order import.
+- Amazon and eBay: order import and stock push for marketplace sellers.
+
+ACCOUNTING
+- QuickBooks Online: invoices, stock movements and supplier bills.
+- Xero: invoices and stock adjustments.
+- Zoho Books: invoices and payments.
+- Tally: stock journal export in Tally-compatible XML.
+
+PAYMENTS AND OPS
+- Stripe and Razorpay for payment links and reconciliation.
+- Zapier and Make for no-code automation (for example, "new low-stock item, post to Slack").
+- Slack and Microsoft Teams notifications for low-stock and order events.
+- Google Sheets export for ad-hoc analysis.
+
+DEVELOPER API
+- REST API with JSON payloads and per-location API keys.
+- Endpoints cover products, stock levels, locations, sales, purchase orders and suppliers.
+- Rate limits: 120 requests per minute on Growth, 600 on Enterprise. Higher limits on request.
+- Webhooks for stock.updated, order.created and purchase_order.received with signed payloads and retries.
+- Sandbox environment available for testing, seeded with sample store data.
+
+IMPLEMENTATION PARTNERS
+A small network of implementation partners in India, the UK and Singapore can handle data migration and on-site staff training. Partner engagements are quoted separately, usually between $500 and $2,500 depending on store count.
+
+ROADMAP (SHARE ONLY IF ASKED)
+- Deeper demand forecasting with seasonality.
+- Purchase order approval workflows.
+- Native support for consignment stock.
+Roadmap items are plans, not commitments; do not promise dates.

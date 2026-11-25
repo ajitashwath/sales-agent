@@ -1,0 +1,42 @@
+StockPilot Features
+
+INVENTORY CONTROL
+- Real-time stock levels across every location, updated as sales and deliveries are recorded.
+- Low-stock and out-of-stock alerts by email, push notification or in-app banner. Reorder points can be set per product and per location.
+- Purchase orders: create, send to suppliers, and receive stock against a PO. Partial receipts are supported.
+- Stock adjustments with a required reason code and full audit trail.
+- Batch and expiry date tracking for perishable goods.
+- Barcode and QR scanning from the phone camera, or from a Bluetooth scanner. Bulk label printing supports common label sizes.
+- Multi-location transfers: request stock from another store, track it in transit, and receive it at the destination.
+
+SALES AND REPORTING
+- Sales dashboard with revenue, units sold, gross margin and stock turn by location.
+- Best sellers and slow movers report, useful for planning purchase orders.
+- Inventory valuation using FIFO or weighted average cost.
+- Export any report to CSV or schedule it as a daily email.
+- Simple demand forecast for the next 30 days based on the last 12 weeks of sales. The forecast is a guide, not a guarantee.
+
+OPERATIONS
+- Offline mode on the mobile app: sales and stock adjustments queue locally and sync automatically when the connection returns. Conflicts are flagged for review.
+- Role-based permissions: owner, manager, stock clerk and read-only auditor.
+- Multi-currency and multi-warehouse support.
+- Supplier and customer records with contact history.
+- CSV import for products and opening stock, with a validation preview before import.
+- REST API for custom integrations, with API keys managed per location.
+
+MOBILE AND DEVICES
+- iOS and Android apps included in every plan.
+- Works on inexpensive Android handhelds and on any phone with a camera.
+- No proprietary hardware required.
+
+RELIABILITY AND SECURITY
+- Data encrypted at rest (AES-256) and in transit (TLS 1.2+).
+- Daily automated backups with 30-day retention on Growth and Enterprise.
+- SOC 2 Type II certified; security documentation available under NDA.
+- 99.9% uptime target; public status page lists incidents and maintenance windows.
+- Data export at any time; customers own their data and can request deletion.
+
+LIMITATIONS TO BE HONEST ABOUT
+- Manufacturing bills of materials and production planning are not supported.
+- Native accounting is not included; StockPilot syncs to accounting software instead.
+- Forecasts are simple statistical estimates and should not replace merchandising judgment.
