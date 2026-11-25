@@ -71,6 +71,11 @@ Return ONLY the structured fields requested by the response schema:
 - outcome: what happened by the end of the call (demo booked, follow-up needed, not a fit, ...).
 - next_action: the single most useful next step for the sales rep.
 
+Some of Riya's lines are marked "[cut off by the caller mid-reply: they did not
+hear the rest]". Do not treat that unfinished content as delivered: assume the
+lead did not hear the end of it, and never credit the lead with information,
+commitments or questions they may not have received.
+
 Be factual. Do not invent details that are not in the transcript. If the call was too short to tell, say so in one line.
 
 TRANSCRIPT

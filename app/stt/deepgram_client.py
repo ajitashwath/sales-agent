@@ -12,7 +12,9 @@ Deepgram v7 uses `client.listen.v1.connect(...)` with event callbacks. We run
 
 Audio format is configured in app/config.py: 16-bit PCM, 16 kHz, mono by
 default. Partial transcripts are forwarded for UI feedback; final transcripts
-trigger an agent turn.
+trigger an agent turn. Voice-activity events (`vad_events=True`) are used for
+barge-in: `SpeechStarted` tells the call handler the caller is talking, so it
+can stop Riya mid-reply.
 """
 
 from __future__ import annotations
@@ -29,6 +31,7 @@ from app.config import get_settings
 logger = logging.getLogger(__name__)
 
 TranscriptHandler = Callable[[str], Awaitable[None]]
+SpeechStartHandler = Callable[[], Awaitable[None]]
 
 
 class DeepgramStreamingSTT:
@@ -39,11 +42,13 @@ class DeepgramStreamingSTT:
         on_partial: TranscriptHandler,
         on_final: TranscriptHandler,
         on_error: TranscriptHandler | None = None,
+        on_speech_started: SpeechStartHandler | None = None,
     ) -> None:
         self._settings = get_settings()
         self._on_partial = on_partial
         self._on_final = on_final
         self._on_error = on_error
+        self._on_speech_started = on_speech_started
 
         self._client: AsyncDeepgramClient | None = None
         self._connection = None
@@ -127,11 +132,18 @@ class DeepgramStreamingSTT:
             await self._safe_call(self._on_error, "Speech recognition is having trouble.")
 
     async def _handle_message(self, message) -> None:
-        """Forward partial/final transcripts, ignore metadata events."""
+        """Forward partial/final transcripts and the VAD speech-start event."""
+        # Deepgram emits ListenV1SpeechStarted.type == "SpeechStarted" when it
+        # hears the caller begin to talk (enabled by vad_events=True). It has no
+        # transcript, so handle it before touching message.channel.
+        if getattr(message, "type", None) == "SpeechStarted":
+            await self._notify_speech_started()
+            return
+
         try:
             transcript = (message.channel.alternatives[0].transcript or "").strip()
         except (AttributeError, IndexError, TypeError):
-            # Metadata / UtteranceEnd / SpeechStarted events have no channel.
+            # Metadata / UtteranceEnd events have no channel either.
             return
 
         if not transcript:
@@ -145,6 +157,15 @@ class DeepgramStreamingSTT:
                 await self._on_partial(transcript)
         except Exception:
             logger.exception("Transcript handler failed")
+
+    async def _notify_speech_started(self) -> None:
+        """Best-effort barge-in signal; never let it break the listen loop."""
+        if self._on_speech_started is None:
+            return
+        try:
+            await self._on_speech_started()
+        except Exception:
+            logger.exception("Speech-start handler failed")
 
     async def _safe_call(self, handler: TranscriptHandler, text: str) -> None:
         try:

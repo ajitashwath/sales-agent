@@ -32,7 +32,8 @@ class CallSession:
 
     session_id: str
     history: list[BaseMessage] = field(default_factory=list)  # LangChain message list
-    transcript: list[dict] = field(default_factory=list)  # [{"speaker": "user"|"agent", "text": ...}]
+    # [{"speaker": "user"|"agent", "text": ...}, agent turns may add "interrupted": True]
+    transcript: list[dict] = field(default_factory=list)
     sentiment: str = "neutral"
     qualification: str = "warm"
     lead_id: int | None = None  # set by the save_lead tool
@@ -41,9 +42,17 @@ class CallSession:
         """Add the lead's utterance to the transcript (history is the agent's)."""
         self.transcript.append({"speaker": "user", "text": text})
 
-    def record_agent(self, text: str) -> None:
-        """Add Riya's spoken reply to the transcript (history is the agent's)."""
-        self.transcript.append({"speaker": "agent", "text": text})
+    def record_agent(self, text: str, interrupted: bool = False) -> None:
+        """Add Riya's spoken reply to the transcript (history is the agent's).
+
+        `interrupted` marks a reply that barge-in cut short: the caller never
+        heard the rest of it, so the summary must not credit them with those
+        details.
+        """
+        entry = {"speaker": "agent", "text": text}
+        if interrupted:
+            entry["interrupted"] = True
+        self.transcript.append(entry)
 
     def transcript_text(self) -> str:
         """Flat transcript for the summariser prompt."""
@@ -52,9 +61,11 @@ class CallSession:
         lines = []
         for turn in self.transcript:
             who = "Lead" if turn["speaker"] == "user" else "Riya"
-            lines.append(f"{who}: {turn['text']}")
+            line = f"{who}: {turn['text']}"
+            if turn.get("interrupted"):
+                line += " [cut off by the caller mid-reply: they did not hear the rest]"
+            lines.append(line)
         return "\n".join(lines)
-
 
     def recent_history(self, max_messages: int) -> list[BaseMessage]:
         """Trim history so long calls do not blow up the prompt.

@@ -87,7 +87,10 @@ async def receive_loop(ws, player: AudioPlayer, summary_received: asyncio.Event)
             elif message_type == "audio_start":
                 print("[client] streaming reply audio...")
             elif message_type == "audio_end":
-                print("[client] reply audio finished")
+                if payload.get("interrupted"):
+                    print("[client] reply audio interrupted (you started talking)")
+                else:
+                    print("[client] reply audio finished")
             elif message_type == "call_summary":
                 print("\n=== CALL SUMMARY ===")
                 print(json.dumps(payload.get("summary", payload), indent=2, ensure_ascii=False))

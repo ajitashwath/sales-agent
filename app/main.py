@@ -9,6 +9,11 @@ Flow per call:
   5. on "end_call" (or disconnect) the transcript is summarised, attached to
      the lead record, and returned as a final JSON message
 
+Barge-in: when the caller starts speaking (Deepgram VAD "SpeechStarted") while
+Riya is thinking or speaking, the current reply's audio is cut within about one
+chunk, the clip closes with "interrupted": true, and any turns queued during
+that reply are dropped. The caller's next final transcript starts a fresh turn.
+
 Message protocol (server -> client):
   {"type": "ready", ...}                       session is live
   {"type": "partial_transcript", "text": ...}  interim STT result
@@ -16,7 +21,7 @@ Message protocol (server -> client):
   {"type": "thinking"}                         agent is working
   {"type": "assistant_text", "text": ...}      reply to speak
   {"type": "audio_start", "format": "pcm_16000"} then binary audio frames,
-  {"type": "audio_end"}
+  {"type": "audio_end", "interrupted": bool}
 
 Control JSON frames can be interleaved between binary audio frames (a partial
 transcript arriving while Riya is still speaking, for example); clients should
@@ -36,7 +41,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from contextlib import asynccontextmanager, suppress
+from contextlib import aclosing, asynccontextmanager, suppress
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
@@ -148,7 +153,34 @@ async def call_websocket(websocket: WebSocket, session_id: str) -> None:
     async def on_stt_error(message: str) -> None:
         await send_json({"type": "warning", "message": message})
 
-    stt = DeepgramStreamingSTT(on_partial=on_partial, on_final=on_final, on_error=on_stt_error)
+    # --- Barge-in ---------------------------------------------------------
+    # `generation` is bumped whenever the caller speaks over Riya. A reply only
+    # keeps streaming audio while its generation is still current, so playback
+    # stops within roughly one chunk (~100 ms) of the caller starting to talk.
+    generation = 0
+    riya_busy = False  # thinking or speaking: the only states she can be cut off in
+
+    async def on_speech_started() -> None:
+        """Deepgram VAD says the caller is talking, not just background noise."""
+        nonlocal generation
+        if not riya_busy:
+            # Nothing to interrupt: their speech becomes an ordinary turn.
+            return
+
+        generation += 1
+        dropped = _drain_queue(turn_queue)
+        logger.info(
+            "session=%s barge-in: cutting the reply, dropped %s queued turn(s)",
+            session_id,
+            dropped,
+        )
+
+    stt = DeepgramStreamingSTT(
+        on_partial=on_partial,
+        on_final=on_final,
+        on_error=on_stt_error,
+        on_speech_started=on_speech_started,
+    )
     await stt.start()
 
     await send_json(
@@ -171,41 +203,70 @@ async def call_websocket(websocket: WebSocket, session_id: str) -> None:
             }
         )
 
-    async def stream_reply_audio(reply: str) -> None:
-        """Send one TTS clip, one chunk at a time. Failures are non-fatal."""
+    async def stream_reply_audio(reply: str, turn_generation: int) -> bool:
+        """Send one TTS clip, one chunk at a time. Failures are non-fatal.
+
+        Stops early if the caller barges in; `aclosing` then closes the HTTP
+        response so ElevenLabs stops synthesising the rest of the clip.
+
+        Returns True when barge-in cut the clip short, so the transcript can
+        record that the caller only heard part of the reply.
+        """
+        interrupted = False
         await send_json({"type": "audio_start", "format": settings.elevenlabs_output_format})
         try:
-            async for chunk in tts.stream_speech(reply):
-                await send_bytes(chunk)
+            async with aclosing(tts.stream_speech(reply)) as audio:
+                async for chunk in audio:
+                    if turn_generation != generation:
+                        interrupted = True
+                        break
+                    await send_bytes(chunk)
         except TTSError as exc:
             logger.error("Text-to-speech failed: %s", exc)
             await send_json({"type": "warning", "message": "Voice playback is temporarily unavailable."})
         except Exception:
             logger.exception("Streaming TTS audio failed")
         finally:
-            await send_json({"type": "audio_end"})
+            # Always close the clip, so a client knows to stop playback now.
+            await send_json({"type": "audio_end", "interrupted": interrupted})
+        return interrupted
 
     async def handle_turn(user_text: str) -> None:
         """Full pipeline for one user utterance."""
+        nonlocal riya_busy
+
         if not user_text.strip():
             return
 
         # The single turn_worker calls this, so turns are already serialised.
-        session.record_user(user_text)
-        await send_json({"type": "thinking"})
-
+        turn_generation = generation
+        riya_busy = True
         try:
-            reply = await run_agent_turn(session, user_text)
-        except AgentUnavailable:
-            logger.error("Gemini is not configured; sending fallback reply")
-            reply = AGENT_FALLBACK
-        except Exception:
-            logger.exception("Agent turn failed")
-            reply = AGENT_FALLBACK
+            session.record_user(user_text)
+            await send_json({"type": "thinking"})
 
-        session.record_agent(reply)
-        await send_json({"type": "assistant_text", "text": reply})
-        await stream_reply_audio(reply)
+            try:
+                reply = await run_agent_turn(session, user_text)
+            except AgentUnavailable:
+                logger.error("Gemini is not configured; sending fallback reply")
+                reply = AGENT_FALLBACK
+            except Exception:
+                logger.exception("Agent turn failed")
+                reply = AGENT_FALLBACK
+
+            if turn_generation != generation:
+                # The caller interrupted while the agent was still thinking:
+                # their new turn matters, not this reply.
+                logger.info("session=%s dropping stale reply (barge-in)", session_id)
+                return
+
+            await send_json({"type": "assistant_text", "text": reply})
+            interrupted = await stream_reply_audio(reply, turn_generation)
+            # Recorded after playback, so the transcript says whether the caller
+            # actually heard the whole reply (the summariser depends on it).
+            session.record_agent(reply, interrupted=interrupted)
+        finally:
+            riya_busy = False
 
     async def turn_worker() -> None:
         """Consume final transcripts sequentially so replies stay ordered."""
@@ -322,3 +383,19 @@ async def _summarise_session(session: CallSession) -> dict:
             logger.exception("Failed to attach summary to lead %s", session.lead_id)
 
     return summary
+
+
+def _drain_queue(queue: asyncio.Queue) -> int:
+    """Discard everything still queued (turns captured during an interrupted reply).
+
+    Returns how many items were dropped. `task_done()` keeps the queue's internal
+    unfinished-task counter balanced, so a later `join()` (if any) cannot hang.
+    """
+    dropped = 0
+    while True:
+        try:
+            queue.get_nowait()
+        except asyncio.QueueEmpty:
+            return dropped
+        queue.task_done()
+        dropped += 1

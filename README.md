@@ -135,17 +135,31 @@ Server → client:
 - `{"type": "partial_transcript", "text": ...}` / `{"type": "final_transcript", "text": ...}`
 - `{"type": "thinking"}`
 - `{"type": "assistant_text", "text": ...}`
-- `{"type": "audio_start", "format": "pcm_16000"}`, then **binary audio frames**, then `{"type": "audio_end"}`
+- `{"type": "audio_start", "format": "pcm_16000"}`, then **binary audio frames**, then `{"type": "audio_end", "interrupted": true|false}`
 - `{"type": "call_summary", "summary": {...}, "lead_id": 2 | null}`
 - `{"type": "warning" | "error", "message": ...}` for degraded paths
+
+Control JSON frames may arrive between binary audio frames (a partial
+transcript while Riya is speaking, for example); treat everything between
+`audio_start` and `audio_end` as one clip.
+
+**Barge-in:** if the caller starts speaking while Riya is replying, Deepgram's
+`SpeechStarted` VAD event bumps the reply's generation. The audio stream stops
+within about one chunk (~100 ms), ElevenLabs' HTTP response is closed, the clip
+ends with `"interrupted": true`, and any turns captured during that reply are
+dropped so she does not answer stale speech. The caller's next final
+transcript starts a fresh turn. A reply cut short is marked as interrupted in
+the transcript, and the summariser is told not to treat its unfinished content
+as delivered.
 
 ## Test it
 ```bash
 # 1) No microphone needed - type turns, get spoken replies:
 python scripts/test_client.py --mode text
 
-# 2) Stream a pre-recorded WAV (must be 16 kHz mono 16-bit):
-ffmpeg -i input.m4a -ar 16000 -ac 1 -sample_fmt s16 sample.wav
+# 2) Stream a pre-recorded WAV (must be 16 kHz mono 16-bit). Replace
+#    YOUR_RECORDING.m4a with a real file you have in this folder:
+ffmpeg -i YOUR_RECORDING.m4a -ar 16000 -ac 1 -sample_fmt s16 sample.wav
 python scripts/test_client.py --mode wav --wav sample.wav
 
 # 3) Live microphone (needs sounddevice + an input device):
@@ -201,8 +215,10 @@ Every external call is wrapped in `try/except` with a logged traceback.
   dict. Production would use Redis with a TTL, so multiple API workers share
   state and a restart does not drop calls.
 - **Turn taking** is final-transcript driven (Deepgram endpointing), with one
-  agent turn at a time per session. Production voice agents add barge-in /
-  VAD-driven interruption and cancel in-flight TTS.
+  agent turn at a time per session. Barge-in uses Deepgram's `SpeechStarted`
+  VAD event: it cuts the current reply's audio and drops the turns queued
+  during it. On open speakers TTS bleed can trigger it through the mic, so a
+  production setup should run echo cancellation (browser AEC) on the input.
 - **No authentication** on the WebSocket or `/leads`; add auth before exposing
   this publicly.
 - **Service-account calendars** can be awkward; the README above covers the
