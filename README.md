@@ -174,6 +174,27 @@ streamed audio, and prints the structured call summary when the call ends.
 Try: *"Hi, I'm Rahul, we run four stores and I want to know your pricing."*
 then *"That sounds reasonable, can we do a demo next week?"*
 
+## Streamlit UI
+A browser front end for the same WebSocket API:
+
+```bash
+# terminal 1 - backend
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+
+# terminal 2 - UI
+streamlit run streamlit_app.py
+```
+
+It serves http://127.0.0.1:8501. **Start call** opens a session, typed messages
+become turns, and each reply is played back as audio (the 16 kHz PCM stream is
+wrapped in a WAV header so the browser can play it). **End call & summarise**
+shows the structured summary and the CRM lead id. The backend URL is editable
+in the sidebar, which also reports `/health`.
+
+Streamlit re-runs the script top to bottom on every interaction, so the
+WebSocket lives on a background thread with a thread-safe event queue
+(`CallClient` in `streamlit_app.py`) instead of in the script's own scope.
+
 ## Google Calendar (service account)
 
 1. In Google Cloud Console: create a project, enable **Google Calendar API**.
